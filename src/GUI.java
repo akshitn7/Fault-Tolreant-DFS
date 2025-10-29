@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 public class GUI extends JFrame implements ActionListener {
 	
     Client[] clients;
-    boolean[] clientState;
     //File content Area
     JTextArea fileContentArea;
     
@@ -27,7 +26,6 @@ public class GUI extends JFrame implements ActionListener {
     public GUI(Client[] clients) {
     	//Client Initialization
         this.clients = clients;
-        clientState = new boolean[]{true,true,true,true};
         //Frame Setup
         setTitle("Fault Tolerant File System Simulation");
         setSize(1200, 800);
@@ -90,6 +88,7 @@ public class GUI extends JFrame implements ActionListener {
             requestLockButtons[i].addActionListener(this);
             renewButtons[i].addActionListener(this);
             writeButtons[i].addActionListener(this);
+            releaseButtons[i].addActionListener(this);
             crashButtons[i].addActionListener(this);
 
             clientPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -117,10 +116,10 @@ public class GUI extends JFrame implements ActionListener {
             //Read Button : add log, read request, response from server
             if (source == readButtons[i]) {
             	logArea.append(clientName + " request to read the file.\n");
-                String response = clients[i].readRequest();
-                logArea.append(response + "\n");
-                if(response == "Read Successful") {
-                	editorArea.setText(clients[i].content);
+                String resp = clients[i].readRequest();
+                logArea.append(resp + "\n");
+                if(resp.equals("READ_SUCCESS")) {
+                	fileContentArea.setText(clients[i].content);
                 }
             } 
             //Request Lock Button: add log, request for lock, if granted enable write button.
@@ -129,8 +128,10 @@ public class GUI extends JFrame implements ActionListener {
                 boolean granted = clients[i].requestLock();
                 if(granted) {
                 	logArea.append(clientName + " was granted lock.\n");
+                	editorArea.setText(clients[i].content);
                 	editorArea.setEditable(true);
-                	
+                	requestLockButtons[i].setEnabled(false);
+                	releaseButtons[i].setEnabled(true);
                 } else {
                 		logArea.append(clientName + " was denied lock.\n");
                 }
@@ -141,30 +142,49 @@ public class GUI extends JFrame implements ActionListener {
             else if(source == renewButtons[i]){
             	boolean renewed = clients[i].renewLock();
             	if(renewed) {
-            		logArea.append(clientName + "lock was renewed");
+            		logArea.append(clientName + " lock was renewed.\n");
             	} else {
-            		logArea.append(clientName + "lock renew failed");
+            		logArea.append(clientName + " lock renew failed.\n");
             	}
             	
             }
             //Write Button: Write the new content to server file
             else if (source == writeButtons[i]) {
             	String newContent = editorArea.getText();
-            	clients[i].writeRequest(newContent);
-                logArea.append(clientName + "released lock.\n");
-                editorArea.setText("");
-                editorArea.setEditable(false);
-                writeButtons[i].setEnabled(false);
-                renewButtons[i].setEnabled(false);
+            	boolean written = clients[i].writeRequest(newContent);
+            	if(written) {
+            		logArea.append(clientName + " wrote successfully.\n");
+            		fileContentArea.setText(newContent);
+            	}
+            	else {
+            		logArea.append(clientName + " write request failed.\n");
+            		editorArea.setEditable(false);
+                    writeButtons[i].setEnabled(false);
+                    renewButtons[i].setEnabled(false);
+                    releaseButtons[i].setEnabled(false);
+                    requestLockButtons[i].setEnabled(true);
+            	}
             } 
             //Release Button: Release the Lock
             else if (source == releaseButtons[i]) {
             	boolean released = clients[i].releaseLock();
+            	if(released) {
+            		logArea.append(clientName + " released the lock.\n");
+            	}
+            	else {
+            		logArea.append(clientName + " release failed beacause it is not the owner of lock.\n");
+            	}
+            	editorArea.setText("");
+            	editorArea.setEditable(false);
+            	writeButtons[i].setEnabled(false);
+            	releaseButtons[i].setEnabled(false);
+            	renewButtons[i].setEnabled(false);
+            	requestLockButtons[i].setEnabled(true);
             }
             // Simulate Crash : Toggle the online status
             else if (source == crashButtons[i]) {
-            	clientState[i] = !clientState[i];
-            	if(clientState[i]) {
+            	clients[i].isOnline = !clients[i].isOnline;
+            	if(clients[i].isOnline) {
             		readButtons[i].setEnabled(true);
             		requestLockButtons[i].setEnabled(true);
             		logArea.append(clientName + " recovered!\n");
@@ -174,6 +194,7 @@ public class GUI extends JFrame implements ActionListener {
             		requestLockButtons[i].setEnabled(false);
             		renewButtons[i].setEnabled(false);
             		writeButtons[i].setEnabled(false);
+            		releaseButtons[i].setEnabled(false);
             		logArea.append(clientName + " crashed!\n");
             		crashButtons[i].setText("Recover");
             	}

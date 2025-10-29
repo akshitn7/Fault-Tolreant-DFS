@@ -6,6 +6,7 @@ public class Client {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+    boolean isOnline = true;
     String content;
 
     public Client(int id, String serverIP, int port) {
@@ -27,14 +28,20 @@ public class Client {
         out.println("READ");
         String resp = waitForResponse();
         if(resp.equals("READ_FAILED"))
-        	return "READ_FAILED";
+        	return resp;
         content = resp;
-        return "READ_SUCCESS" + content;
+        return "READ_SUCCESS";
     }
 
     public boolean requestLock() {
         out.println("LOCK");
-        return waitForResponse().equals("LOCK_GRANTED");
+        String[] resp = waitForResponse().split(" ",2);
+        if(resp[0].equals("LOCK_GRANTED")) {
+        	if(resp.length > 1)
+        		content = resp[1];
+        	return true;
+        }
+        return false;   
     }
 
     public boolean renewLock() {
@@ -44,12 +51,16 @@ public class Client {
 
     public boolean writeRequest(String newContent) {
         out.println("WRITE " + newContent);
-        return waitForResponse().equals("WRITE_SUCCESSFUL");
+        if(waitForResponse().equals("WRITE_SUCCESS")) {
+        	content = newContent;
+        	return true;
+        }
+        return false;
     }
 
     public boolean releaseLock() {
     	out.println("RELEASE");
-    	return waitForResponse().equals("RELEASE_SUCCESSFUL");
+    	return waitForResponse().equals("RELEASE_SUCCESS");
     }
     
     private String waitForResponse() {

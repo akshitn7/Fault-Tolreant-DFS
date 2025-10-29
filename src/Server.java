@@ -36,10 +36,6 @@ public class Server {
     private synchronized void checkLockExpiry() {
         if (isLocked && System.currentTimeMillis() > lockExpiryTime) {
             System.out.println("Lock expired for client " + lockedBy);
-            ClientHandler client = clients.get(lockedBy);
-            if (client != null) {
-                client.sendMessage("LOCK_EXPIRED");
-            }
             isLocked = false;
             lockedBy = -1;
 
@@ -67,7 +63,6 @@ public class Server {
                     this::checkLockExpiry, 1, 1, TimeUnit.SECONDS
                 );
             }
-
             return true;
         }
         return false;
@@ -100,6 +95,7 @@ public class Server {
             }
             return true;
         }
+    	System.out.println("[DEBUG] Lock released by client " + clientId);
         return false;
     }
 
@@ -139,20 +135,21 @@ public class Server {
                             break;
                         case "LOCK":
                             boolean granted = handleLock(clientId);
-                            sendMessage(granted ? "LOCK_GRANTED" : "LOCK_DENIED");
+                            sendMessage(granted ? "LOCK_GRANTED " + content : "LOCK_DENIED");
                             break;
                         case "RENEW":
                             boolean renewed = handleRenew(clientId);
                             sendMessage(renewed ? "LOCK_RENEWED" : "LOCK_RENEW_FAILED");
                             break;
                         case "WRITE":
-                            if (parts.length >= 2) {
+                            if (parts.length > 1) {
                                 sendMessage(handleWrite(clientId, parts[1]));
                             }
                             break;
                         case "RELEASE":
                         	boolean released = handleRelease(clientId);
-                        	sendMessage(released ? "RELEASE_SUCCESSFUL" : "RELEASE_FAILED");
+                        	sendMessage(released ? "RELEASE_SUCCESS" : "RELEASE_FAILED");
+                        	break;
                         default:
                             sendMessage("UNKNOWN_COMMAND");
                     }
