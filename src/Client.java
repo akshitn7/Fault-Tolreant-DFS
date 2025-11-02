@@ -19,7 +19,8 @@ public class Client {
             out.println(this.id);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Failed to connect. The Server IP might be wrong. Try again.");
+            System.exit(0);
         }
     }
 

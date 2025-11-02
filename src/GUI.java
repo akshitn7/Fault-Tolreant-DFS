@@ -170,12 +170,12 @@ public class GUI extends JFrame implements ActionListener {
             	boolean released = clients[i].releaseLock();
             	if(released) {
             		logArea.append(clientName + " released the lock.\n");
+            		editorArea.setText("");
+                	editorArea.setEditable(false);
             	}
             	else {
             		logArea.append(clientName + " release failed beacause it is not the owner of lock.\n");
             	}
-            	editorArea.setText("");
-            	editorArea.setEditable(false);
             	writeButtons[i].setEnabled(false);
             	releaseButtons[i].setEnabled(false);
             	renewButtons[i].setEnabled(false);

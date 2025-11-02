@@ -95,7 +95,6 @@ public class Server {
             }
             return true;
         }
-    	System.out.println("[DEBUG] Lock released by client " + clientId);
         return false;
     }
 
@@ -131,23 +130,31 @@ public class Server {
 
                     switch (cmd) {
                         case "READ":
+                        	System.out.println("Client " + clientId + " requested read.");
                             sendMessage(handleRead());
                             break;
                         case "LOCK":
+                        	System.out.println("Client " + clientId + " requested lock.");
                             boolean granted = handleLock(clientId);
+                            System.out.println(granted ? "LOCK_GRANTED " + content : "LOCK_DENIED");
                             sendMessage(granted ? "LOCK_GRANTED " + content : "LOCK_DENIED");
                             break;
                         case "RENEW":
+                        	System.out.println("Client " + clientId + " requested lock renew.");
                             boolean renewed = handleRenew(clientId);
+                            System.out.println(renewed ? "LOCK_RENEWED" : "LOCK_RENEW_FAILED");
                             sendMessage(renewed ? "LOCK_RENEWED" : "LOCK_RENEW_FAILED");
                             break;
                         case "WRITE":
+                        	System.out.println("Client " + clientId + " requested write.");
                             if (parts.length > 1) {
                                 sendMessage(handleWrite(clientId, parts[1]));
                             }
                             break;
                         case "RELEASE":
+                        	System.out.println("Client " + clientId + " wants to release lock.");
                         	boolean released = handleRelease(clientId);
+                        	System.out.println(released ? "RELEASE_SUCCESS" : "RELEASE_FAILED");
                         	sendMessage(released ? "RELEASE_SUCCESS" : "RELEASE_FAILED");
                         	break;
                         default:
