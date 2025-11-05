@@ -78,9 +78,11 @@ public class Server {
 
     private synchronized String handleWrite(int clientId, String newContent) {
         if (isLocked && lockedBy == clientId) {
-            content = newContent;        
+            content = newContent;
+            System.out.println("Succesful");
             return "WRITE_SUCCESS";
         }
+        System.out.println("Failed");
         return "WRITE_FAILED";
     }
     
@@ -136,7 +138,7 @@ public class Server {
                         case "LOCK":
                         	System.out.println("Client " + clientId + " requested lock.");
                             boolean granted = handleLock(clientId);
-                            System.out.println(granted ? "LOCK_GRANTED " + content : "LOCK_DENIED");
+                            System.out.println(granted ? "LOCK_GRANTED" : "LOCK_DENIED");
                             sendMessage(granted ? "LOCK_GRANTED " + content : "LOCK_DENIED");
                             break;
                         case "RENEW":
@@ -150,6 +152,7 @@ public class Server {
                             if (parts.length > 1) {
                                 sendMessage(handleWrite(clientId, parts[1]));
                             }
+                            System.out.println(content);
                             break;
                         case "RELEASE":
                         	System.out.println("Client " + clientId + " wants to release lock.");
